@@ -520,6 +520,7 @@ Point {
 class: middle, left
 
 imagine
+
 ```rust
 use std::fmt;
 
@@ -536,6 +537,7 @@ impl fmt::Debug for Point {
             .finish()
     }
 }
+
 let point = Point { x: 1, y: 2 };
 println!("{:#?}", point);
 ```
@@ -550,6 +552,7 @@ struct Point {
     x: isize,
     y: isize,
 }
+
 let point = Point { x: 1, y: 2 };
 println!("{:#?}", point);
 ```
