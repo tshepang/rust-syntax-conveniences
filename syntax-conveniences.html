@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Rust syntax conveniences</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+  </head>
+  <body>
+    <textarea id="source">
+class: middle, center
+
+# syntax conveniences afforded by the Rust compiler
+
+Tshepang Lekhonkhobe
+
+@tshepang_dev
+
+---
+class: middle, left
+
+# about
+
+- I studied electronics formally, but prefer software, hence the switch
+
+- I was a Python fan, and now Rust
+
+- I work at https://panoptix.co.za, which uses Rust in production since 2016
+
+- https://twitter.com/tshepang_dev
+
+---
+class: middle, center
+
+## looping
+
+---
+class: middle, center
+### desired output
+```
+1
+2
+3
+```
+
+---
+class: middle, left
+
+raw
+
+```rust
+let three: &[i32] = &[1, 2, 3];
+let mut index = 0;
+let count = three.len();
+
+loop {
+    if index == count {
+        break;
+    }
+    println!("{}", three[index]);
+    index += 1;
+}
+```
+
+---
+class: middle, left
+
+with __while__ keyword, some sugar
+
+```rust
+let mut index = 0;
+let count = three.len();
+while index < count {
+    println!("{}", three[index]);
+    index += 1;
+}
+```
+
+---
+class: middle, left
+
+with a trait
+
+```rust
+let mut it = three.iter();
+while let Some(member) = it.next() {
+    println!("{}", member);
+}
+```
+
+---
+class: middle, left
+
+with __for__ keyword, moar sugar
+
+```rust
+for member in three {
+    println!("{}", member);
+}
+```
+
+---
+class: middle, left
+
+addendum, a functional approach (aka who needs __for__ anyways)
+
+```rust
+three.iter().for_each(|member| println!("{}", member));
+```
+
+---
+class: middle, center
+
+## range
+
+---
+class: middle, center
+### desired output
+```
+1
+2
+3
+```
+
+---
+class: middle, left
+
+there is a type we can use
+
+```rust
+for n in std::ops::RangeInclusive::new(1, 3) {
+    println!("{}", n);
+}
+
+```
+---
+class: middle, left
+
+... or we can take advantage of this convenience
+
+```rust
+for n in 1..=3 {
+    println!("{}", n);
+}
+```
+
+---
+class: middle, center
+## method calls
+
+---
+class: middle, left
+
+A contrived type
+
+```rust
+pub struct MaxThree {
+    counter: usize,
+}
+
+impl MaxThree {
+    pub fn new() -> Self {
+        Self { counter: 0 }
+    }
+
+    pub fn increase(&mut self) {
+        if self.counter < 3 {
+            self.counter += 1;
+        }
+    }
+
+    pub fn current(&self) -> usize {
+        self.counter
+    }
+}
+```
+---
+class: middle, center
+### desired output
+
+```plain
+loop 0: counter=1
+loop 1: counter=2
+loop 2: counter=3
+loop 3: counter=3
+loop 4: counter=3
+```
+
+---
+class: middle, left
+
+very explicit
+
+```rust
+let mut max_three = MaxThree::new();
+for n in 0..=4 {
+    MaxThree::increase(&mut max_three); // <- look that
+    println!(
+        "loop {}: counter={:?}",
+        n,
+        MaxThree::current(&max_three), // <- look that
+    );
+}
+```
+
+---
+class: middle, left
+
+with explicit borrows
+
+```rust
+let mut max_three = MaxThree::new();
+for n in 0..=4 {
+    (&mut max_three).increase(); // <- look that
+    println!(
+        "loop {}: counter={:?}",
+        n,
+        (&max_three).current(), // <- look that
+    );
+}
+```
+
+---
+class: middle, left
+
+then, finally...
+
+```rust
+let mut max_three = MaxThree::new();
+for n in 0..=4 {
+    max_three.increase();
+    println!(
+        "loop {}: counter={:?}",
+        n,
+        max_three.current(),
+    )
+}
+```
+
+---
+class: middle, center
+## self shorthand
+
+---
+class: middle, left
+
+A contrived type (again)
+
+```rust
+struct Number(i32);
+
+impl Number {
+    fn increase(self: &mut Self) {
+        self.0 += 1;
+    }
+    fn increase_elided(&mut self) {
+        self.0 += 1;
+    }
+}
+```
+---
+class: middle, left
+
+They behave exactly the same
+
+```rust
+let mut number = Number(0);
+
+number.increase();
+println!("explicit increment: {}", number.0);
+number.increase_elided();
+println!("elided increment: {}", number.0);
+```
+
+output
+```
+explicit increment: 1
+elided increment: 2
+```
+
+---
+class: middle, left
+
+"The Others"
+
+```rust
+&mut self ~-> self: &mut Self
+&self     ~-> self: &Self
+self      ~-> self: Self
+```
+---
+class: middle, center
+
+## arithmetic shorthands
+
+---
+class: middle, left
+
+before
+
+```rust
+let mut foo = 1;
+foo = foo + 1;
+assert_eq!(foo, 2);
+```
+
+after
+
+```rust
+let mut foo = 1;
+foo += 1; // <- look that
+assert_eq!(foo, 2);
+```
+---
+class: middle, left
+
+similarly
+
+```rust
+let mut foo = 4;
+foo = foo * 4;
+assert_eq!(foo, 16);
+```
+
+after
+
+```rust
+let mut foo = 4;
+foo *= 4; // <- look that
+assert_eq!(foo, 16);
+```
+
+---
+class: middle, center
+
+## question mark operator
+
+---
+class: middle, left
+
+before
+
+```rust
+let content = match fs::read("/etc/os-release") {
+    Ok(content) => content,
+    Err(why) => return Err(why),
+};
+use(&content);
+```
+
+after
+
+```rust
+let content = fs::read("/etc/os-release")?; // <- look that
+use(&content);
+```
+
+---
+class: middle, left
+
+and now for something nested
+
+```rust
+let content_bytes = match fs::read("/etc/motd") {
+    Ok(content) => content,
+    Err(why) => return Err(why.into()),
+};
+let content_utf8 = match String::from_utf8(content_bytes) {
+    Ok(content) => content,
+    Err(why) => return Err(why.into()),
+};
+```
+
+much better...
+
+```rust
+let content = String::from_utf8(fs::read("/etc/motd")?)?;
+```
+
+---
+class: middle, center
+
+## lifetime elision
+
+---
+class: middle, left
+
+function call before
+
+```rust
+fn not_elided<'a>(value: &'a str) {
+    println!("{}", value);
+}
+```
+
+... and after
+
+```rust
+fn elided(value: &str) {
+    println!("{}", value);
+}
+```
+
+---
+class: middle, left
+
+**const**
+
+```rust
+const NOISY: &'static str = "some value";
+const ELIDED: &str = "some value"
+```
+
+**static**
+
+```rust
+static NOISY: &'static str = "some value"
+static ELIDED: &str = "some value";
+```
+
+---
+class: middle, center
+
+## type inference, and coercion
+
+---
+class: middle, left
+
+all bare
+```rust
+let value: Vec<u8> = (1_u8..=3_u8).collect();
+```
+
+less annotating
+```rust
+let value: Vec<_> = (1_u8..=3_u8).collect();
+```
+
+even less type annotating
+```rust
+let value: Vec<_> = (1_u8..=3).collect();
+```
+
+you can also just go with default (fallback) int type
+```rust
+let value: Vec<_> = (1..=3).collect();
+```
+
+---
+class: middle, left
+
+There is also...
+
+```rust
+let mut explicit: Vec<f32> = Vec::new();
+explicit.push(0.1_f32);
+
+let mut inferred = Vec::new();
+inferred.push(0.1_f32);
+```
+
+---
+class: middle, left
+
+```rust
+// very explicit... no inference or coercion
+let foo: i64 = 1_64;
+
+// coerced to i8
+let foo: i8 = 1;
+
+// inferred to be i16
+let foo = 1;
+assert_eq!(foo, 1_i16);
+
+// inferred to be i32, the int fallback
+let foo = 1;
+assert_eq!(foo, 1);
+```
+
+---
+class: middle, left
+
+no type annotation needed on `Iter::collect`
+
+```rust
+fn to_vec(value: &str) -> Vec<&str> {
+    value.split_whitespace().collect()
+}
+
+let value = to_vec("1 2 3");
+println!("no turbofish needed: {:?}", value);
+
+assert_eq!(value, vec!["1", "2", "3"]);
+```
+
+... but we could if we wanted
+```rust
+value.split_whitespace().collect::<Vec<&str>>()
+```
+
+---
+class: middle, center
+
+## derive
+
+---
+class: middle, left
+
+### ~~desired~~ expected output
+
+```rust
+Point {
+    x: 1,
+    y: 2
+}
+```
+(I wish there was a trailing comma, for my eyes)
+
+---
+class: middle, left
+
+imagine
+```rust
+use std::fmt;
+
+struct Point {
+    x: isize,
+    y: isize,
+}
+
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Point")
+            .field("x", &self.x)
+            .field("y", &self.y)
+            .finish()
+    }
+}
+let point = Point { x: 1, y: 2 };
+println!("{:#?}", point);
+```
+---
+class: middle, left
+
+more pleasant
+
+```rust
+#[derive(Debug)] // <- look that
+struct Point {
+    x: isize,
+    y: isize,
+}
+let point = Point { x: 1, y: 2 };
+println!("{:#?}", point);
+```
+
+---
+class: middle, center
+
+## deref coercion
+
+---
+class: middle, left
+
+setup
+
+```rust
+use std::{
+    ffi::OsStr,
+    ops::Deref,
+    path::{Path, PathBuf},
+};
+
+let borrowed = Path::new("some/path.txt");
+let owned = PathBuf::from("some/path.txt");
+```
+
+---
+class: middle, left
+
+we can do all these
+
+```rust
+assert_eq!(owned, borrowed); // PartialEq
+assert_eq!(&owned, borrowed); // another way to peel avo
+assert_eq!(owned, *borrowed); // yet another way to peel avo
+```
+
+also
+
+```rust
+fn ext(value: &Path) -> Option<&OsStr> {
+    value.extension()
+}
+assert_eq!(ext(&owned), ext(borrowed));
+assert_eq!(ext(owned.deref()), ext(borrowed));
+assert_eq!(ext(owned.as_path()), ext(borrowed));
+assert_eq!(ext(&owned), Some(OsStr::new("txt")));
+```
+
+---
+class: middle, center
+## if let
+
+---
+class: middle, left
+
+```rust
+let maybe = (1..3).next();
+
+// before
+match maybe {
+    Some(value) => println!("{:?}", value),
+    None => (),
+};
+
+// after
+if let Some(value) = maybe {
+    println!("{:?}", value);
+};
+```
+
+---
+class: middle, center
+
+## pretty imports
+
+---
+class: middle, left
+
+you could do this
+
+```rust
+use std::path;
+use std::path::Path;
+use std::path::PathBuf;
+```
+
+or this
+
+```rust
+use std::path::{{self, Path, PathBuf}};
+```
+
+maybe this even
+```rust
+use std::path::{
+    self,
+    Path,
+    PathBuf,
+};
+```
+
+---
+class: middle, left
+
+# thanks
+
+- Rust in Ten Slides (https://github.com/steveklabnik/rust-in-ten-slides)
+
+- RustFest Paris 2018 (https://paris.rustfest.eu)
+
+- Rust team (https://rust-lang.org/team)
+
+
+
+
+    </textarea>
+    <script src="remark-latest.min.js" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
