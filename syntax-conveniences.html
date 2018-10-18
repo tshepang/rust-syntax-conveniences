@@ -634,6 +634,7 @@ class: middle, left
 you could do this
 
 ```rust
+use std::fs;
 use std::path;
 use std::path::Path;
 use std::path::PathBuf;
@@ -642,15 +643,16 @@ use std::path::PathBuf;
 or this
 
 ```rust
-use std::path::{{self, Path, PathBuf}};
+use std::{fs, path::{self, Path, PathBuf}};
 ```
 
 maybe this even
 ```rust
-use std::path::{
-    self,
-    Path,
-    PathBuf,
+use std::{
+    path::{
+        self,
+        Path,
+        PathBuf,
 };
 ```
 
