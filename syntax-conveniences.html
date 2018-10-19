@@ -345,14 +345,12 @@ let content = match fs::read("/etc/os-release") {
     Ok(content) => content,
     Err(why) => return Err(why),
 };
-use(&content);
 ```
 
 after
 
 ```rust
 let content = fs::read("/etc/os-release")?; // <- look that
-use(&content);
 ```
 
 ---
