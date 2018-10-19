@@ -638,21 +638,25 @@ use std::fs;
 use std::path;
 use std::path::Path;
 use std::path::PathBuf;
+use std::time::Duration;
 ```
 
 or this
 
 ```rust
-use std::{fs, path::{self, Path, PathBuf}};
+use std::{fs, path::{self, Path, PathBuf}, time::Duration};
 ```
 
 maybe this even
 ```rust
 use std::{
+    fs,
     path::{
         self,
         Path,
         PathBuf,
+    },
+    time::Duration,
 };
 ```
 
