@@ -48,9 +48,9 @@ class: middle, left
 raw
 
 ```rust
-let three: &[i32] = &[1, 2, 3];
-let mut index = 0;
+let three = [1, 2, 3];
 let count = three.len();
+let mut index = 0;
 
 loop {
     if index == count {
@@ -67,8 +67,9 @@ class: middle, left
 with __while__ keyword, which offers a bit of sugar
 
 ```rust
-let mut index = 0;
+let three = [1, 2, 3];
 let count = three.len();
+let mut index = 0;
 
 while index < count {
     println!("{}", three[index]);
@@ -82,7 +83,9 @@ class: middle, left
 with a trait
 
 ```rust
+let three = [1, 2, 3];
 let mut it = three.iter();
+
 while let Some(member) = it.next() {
     println!("{}", member);
 }
@@ -94,7 +97,9 @@ class: middle, left
 with __for__ keyword, moar sugar
 
 ```rust
-for member in three {
+let three = [1, 2, 3];
+
+for member in three.iter() {
     println!("{}", member);
 }
 ```
@@ -105,6 +110,7 @@ class: middle, left
 addendum, a functional approach (aka who needs __for__ anyways)
 
 ```rust
+let three = [1, 2, 3];
 three.iter().for_each(|member| println!("{}", member));
 ```
 
@@ -375,6 +381,9 @@ much better...
 let content = String::from_utf8(fs::read("/etc/motd")?)?;
 ```
 
+(You may note that this is contrived, since stdlib got
+`fs::read_to_string` method.)
+
 ---
 class: middle, center
 
@@ -429,19 +438,36 @@ all bare
 let value: Vec<u8> = (1_u8..=3_u8).collect();
 ```
 
-less annotating
+less type annotating
 ```rust
 let value: Vec<_> = (1_u8..=3_u8).collect();
 ```
 
-even less type annotating
+even less annotating
 ```rust
 let value: Vec<_> = (1_u8..=3).collect();
 ```
 
-you can also just go with default (fallback) int type
+you can also just go with fallback int type, `i32`
 ```rust
 let value: Vec<_> = (1..=3).collect();
+```
+---
+class: middle, left
+
+addendum, something surprising
+```rust
+let mut value: Vec<_> = (1..=3).collect();
+assert_eq!(value, [1, 2, 3_u8]);
+value.insert(3, 266);
+println!("{:?}", value);
+```
+
+---
+class: middle, left
+
+```
+[1, 2, 3, 10]
 ```
 
 ---
@@ -467,11 +493,11 @@ let foo: i64 = 1_64;
 // coerced to i8
 let foo: i8 = 1;
 
-// inferred to be i16
+// inferred to i16
 let foo = 1;
 assert_eq!(foo, 1_i16);
 
-// inferred to be i32, the int fallback
+// inferred to i32, the int fallback
 let foo = 1;
 assert_eq!(foo, 1);
 ```
@@ -479,7 +505,7 @@ assert_eq!(foo, 1);
 ---
 class: middle, left
 
-no type annotation needed on `Iter::collect`
+no type annotation (turbofish) needed on `Iter::collect`
 
 ```rust
 fn to_vec(value: &str) -> Vec<&str> {
@@ -487,8 +513,6 @@ fn to_vec(value: &str) -> Vec<&str> {
 }
 
 let value = to_vec("1 2 3");
-println!("no turbofish needed: {:?}", value);
-
 assert_eq!(value, vec!["1", "2", "3"]);
 ```
 
@@ -666,7 +690,7 @@ class: middle, left
 
 - Rust in Ten Slides (https://github.com/steveklabnik/rust-in-ten-slides)
 
-- RustFest Paris 2018 (https://paris.rustfest.eu)
+- RustFest Paris 2018, for inspiration (https://paris.rustfest.eu)
 
 - Rust team (https://rust-lang.org/team)
 
